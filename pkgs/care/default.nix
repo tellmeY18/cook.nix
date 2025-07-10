@@ -15,8 +15,8 @@ in pythonPackages.buildPythonApplication rec {
 
   # Use pip to install all dependencies from Pipfile or requirements.txt in the source repo
   format = "other";
-  # pip is required for install
-  propagatedBuildInputs = [ pythonPackages.pip ];
+  # pip and pipenv are required for install
+  propagatedBuildInputs = [ pythonPackages.pip pkgs.pipenv ];
 
   # If the repo does not contain requirements.txt, you can generate it from Pipfile.lock
   # Here we assume requirements.txt or Pipfile/Pipfile.lock is present in the repo
@@ -29,11 +29,11 @@ in pythonPackages.buildPythonApplication rec {
       reqfile=requirements.txt
     elif [ -f Pipfile.lock ]; then
       # Use pipenv to generate requirements.txt from Pipfile.lock
-      ${pythonPackages.pipenv}/bin/pipenv lock --requirements > requirements.txt
+      ${pkgs.pipenv}/bin/pipenv lock --requirements > requirements.txt
       reqfile=requirements.txt
     elif [ -f Pipfile ]; then
       # Use pipenv to generate requirements.txt from Pipfile
-      ${pythonPackages.pipenv}/bin/pipenv lock --requirements > requirements.txt
+      ${pkgs.pipenv}/bin/pipenv lock --requirements > requirements.txt
       reqfile=requirements.txt
     else
       echo "No requirements.txt or Pipfile found!"
