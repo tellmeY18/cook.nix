@@ -6,9 +6,6 @@ let
 in pythonPackages.buildPythonApplication rec {
   pname = "care";
   version = "3.0.0";
-  pyproject = true;
-  build-system = [ pythonPackages.setuptools ];
-
   src = pkgs.fetchFromGitHub {
     owner  = "ohcnetwork";
     repo   = "care";
@@ -16,67 +13,44 @@ in pythonPackages.buildPythonApplication rec {
     sha256 =  "sha256-B7d+hiNYDVSDicukVakTl4g3d6dz8uEWy9skzlrfw5U=";
   };
 
-  propagatedBuildInputs = with pythonPackages; [
-    argon2-cffi
-    authlib
-    boto3
-    celery
-    django
-    django-environ
-    django-cors-headers
-    django-filter
-    django-maintenance-mode
-    django-queryset-csv
-    django-ratelimit
-    django-redis
-    django-rest-passwordreset
-    django-simple-history
-    djangoql
-    djangorestframework
-    djangorestframework-simplejwt
-    dry-rest-permissions
-    drf-nested-routers
-    drf-spectacular
-    gunicorn
-    healthy-django
-    json-fingerprint
-    jsonschema
-    newrelic
-    pillow
-    psycopg
-    pydantic
-    pyjwt
-    python-slugify
-    pywebpush
-    redis
-    redis-om
-    requests
-    simplejson
-    sentry-sdk
-    whitenoise
-    django-anymail
-    pydantic-extra-types
-    phonenumberslite
-    # Add any other dependencies as needed
-    hiredis
-  ];
+  # Use pip to install all dependencies from Pipfile or requirements.txt in the source repo
+  format = "other";
+  # pip is required for install
+  propagatedBuildInputs = [ pythonPackages.pip ];
 
-  checkInputs = [ pythonPackages.pytest ];
-  doCheck     = false;
+  # If the repo does not contain requirements.txt, you can generate it from Pipfile.lock
+  # Here we assume requirements.txt or Pipfile/Pipfile.lock is present in the repo
 
   installPhase = ''
     runHook preInstall
+
+    # Prefer requirements.txt, fallback to Pipfile if needed
+    if [ -f requirements.txt ]; then
+      reqfile=requirements.txt
+    elif [ -f Pipfile.lock ]; then
+      # Use pipenv to generate requirements.txt from Pipfile.lock
+      ${pythonPackages.pipenv}/bin/pipenv lock --requirements > requirements.txt
+      reqfile=requirements.txt
+    elif [ -f Pipfile ]; then
+      # Use pipenv to generate requirements.txt from Pipfile
+      ${pythonPackages.pipenv}/bin/pipenv lock --requirements > requirements.txt
+      reqfile=requirements.txt
+    else
+      echo "No requirements.txt or Pipfile found!"
+      exit 1
+    fi
+
+    # Install all dependencies with pip
+    ${pythonPackages.pip}/bin/pip install --prefix=$out --no-cache-dir -r $reqfile
 
     mkdir -p $out/lib/care
     cp -r . $out/lib/care
     chmod +x $out/lib/care/manage.py
 
-    # Create a wrapper for manage.py
     makeWrapper $out/lib/care/manage.py $out/bin/care-manage \
       --prefix PYTHONPATH : "$PYTHONPATH" \
       --set DJANGO_SETTINGS_MODULE config.settings.staging
 
-    # Create wrappers for gunicorn and celery
     makeWrapper ${lib.getExe pythonPackages.gunicorn} $out/bin/care-gunicorn \
       --prefix PYTHONPATH : "$PYTHONPATH" \
       --set DJANGO_SETTINGS_MODULE config.settings.staging
