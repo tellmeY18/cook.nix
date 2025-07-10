@@ -8,22 +8,20 @@
       let
         pkgs = import nixpkgs {
           inherit system;
+          overlays = [ (import ./overlays/care-overlay.nix) ];
         };
       in
       {
         formatter = pkgs.nixpkgs-fmt;
         packages = {
-          care = pkgs.callPackage ./pkgs/care/package.nix { };
+          care = pkgs.care;
         };
       }
     ) // {
       nixosModules.default = { config, lib, pkgs, ... }@args: {
         imports = [ ./modules/default.nix ];
-
-        config = {
-          # NOTE: You must set services.care.package explicitly in your NixOS configuration, e.g.:
-          # services.care.package = inputs.cook.packages.${pkgs.system}.care;
-        };
+        # With the overlay, pkgs.care is available by default.
+        config = { };
       };
     };
 }

@@ -17,6 +17,10 @@ inputs.cook.url = "github:tellmeY18/cook.nix";
 
 ---
 
+### Overlay: `pkgs.care` is available by default
+
+This flake provides an overlay so that `pkgs.care` is available automatically in your NixOS configuration and modules. You do **not** need to set `services.care.package` manually unless you want to override it.
+
 ### 2. Add the CARE module to your NixOS host configuration
 
 In your `nixosConfigurations.<hostname>` block:
@@ -39,13 +43,12 @@ nixosConfigurations.chopper = nixpkgs.lib.nixosSystem {
 In `./hosts/chopper/configuration.nix` (or wherever you configure your host):
 
 ```nix
-{ config, pkgs, lib, cook, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   services.care = {
     enable = true;
-    # Reference the care package from the cook flake input
-    package = cook.packages.${pkgs.system}.care;
+    # No need to set package = pkgs.care; -- the overlay makes pkgs.care available by default!
     # Optionally, customize roles and environment:
     api.enable = true;
     worker.enable = true;
@@ -64,8 +67,7 @@ In `./hosts/chopper/configuration.nix` (or wherever you configure your host):
 ```
 
 **Note:**  
-- The variable `cook` is available in your host config if you pass it via `specialArgs` in your flake (recommended).
-- If you use `specialArgs`, add `specialArgs = { inherit cook; };` to your `nixosConfigurations.<hostname>` block.
+- The overlay in this flake makes `pkgs.care` available everywhere. You do **not** need to set `services.care.package` unless you want to override the default.
 
 ---
 
@@ -112,7 +114,7 @@ For advanced S3/garage2 configuration, add the relevant environment variables.
 ## Notes
 
 - No impure scripting or bash is used; all orchestration is handled via pure Nix and systemd.
-- You **must** set `services.care.package` explicitly as shown above, because Nix flakes do not automatically pass outputs into module scope.
+- The overlay ensures `pkgs.care` is available by default. You only need to set `services.care.package` if you want to override the default.
 - For more advanced configuration, see the comments in `cook.nix/modules/care.nix`.
 
 ---
@@ -123,7 +125,7 @@ For advanced S3/garage2 configuration, add the relevant environment variables.
 {
   services.care = {
     enable = true;
-    package = inputs.cook.packages.${pkgs.system}.care;
+    # package = pkgs.care; # Not needed unless you want to override!
     api.enable = true;
     worker.enable = true;
     beat.enable = true;
