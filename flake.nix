@@ -41,8 +41,8 @@
         imports = [ ./modules/default.nix ];
 
         config = {
-          # If package isn't explicitly set, use our care package
-          services.care.package = lib.mkDefault pkgs.care;
+          # If package isn't explicitly set, use our care package from flake outputs
+          services.care.package = lib.mkDefault self.packages.${system}.care;
         };
       };
     };
