@@ -41,13 +41,9 @@
         imports = [ ./modules/default.nix ];
 
         config = {
-          # Apply the overlay to make care package available
-          nixpkgs.overlays = [ (import ./overlays/care-overlay.nix) ];
-
           # If package isn't explicitly set, use our care package
           services.care.package = lib.mkDefault pkgs.care;
         };
       };
-      overlays.default = import ./overlays/care-overlay.nix;
     };
 }
