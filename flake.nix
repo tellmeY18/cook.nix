@@ -3,8 +3,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils?ref=main";
   };
-  outputs = { nixpkgs, flake-utils, ... }: flake-utils.lib.eachDefaultSystem
-    (system:
+  outputs = { nixpkgs, flake-utils, ... }@inputs:
+    flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -17,7 +17,7 @@
         };
       }
     ) // {
-    nixosModules.default = import ./modules;
-    overlays.default = import ./overlays/care-overlay.nix;
-  };
+      nixosModules.default = import ./modules;
+      overlays.default = import ./overlays/care-overlay.nix;
+    };
 }
