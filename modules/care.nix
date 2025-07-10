@@ -111,7 +111,7 @@ in {
         ExecStartPre = lib.concatStringsSep " && " [
           # Wait for PostgreSQL
           "${wait4x}/bin/wait4x tcp ${config.services.care.environment.POSTGRES_HOST or "localhost"}:${toString (config.services.care.environment.POSTGRES_PORT or 5432)} --timeout 60s"
-          # Wait for Redis
+           # Wait for Redis
           "${wait4x}/bin/wait4x tcp ${config.services.care.environment.REDIS_HOST or "localhost"}:${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
