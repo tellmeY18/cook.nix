@@ -1,6 +1,6 @@
 # CARE module for NixOS
-# NOTE: The care package is now built via dream2nix in flake.nix.
-# There is no overlay or pkgs/care/default.nix; all dependency resolution is handled by dream2nix.
+# NOTE: The care package is now built via pkgs/care/package.nix in flake.nix.
+# All dependency resolution is handled by pipInstallHook and requirements.lock.
 { config, pkgs, lib, ... }:
 
 let
@@ -80,7 +80,7 @@ in {
     # services.redis.servers."".bind = config.services.care.environment.REDIS_HOST or "127.0.0.1";
     # services.redis.servers."".requirePass = config.services.care.environment.REDIS_AUTH_TOKEN or null;
 
-    # The care package is provided by dream2nix from flake.nix as pkgs.care.
+    # The care package is provided by flake.nix as pkgs.care.
 
     # Django migration oneshot service
     systemd.services.care-migrate = {

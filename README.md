@@ -1,45 +1,51 @@
 # cook.nix
 
-## CARE Django EMR on NixOS with dream2nix
+## How to Use cook.nix in Your NixOS Flake
 
-This repository provides a NixOS module and a prebuilt Django EMR package (`care`) using [dream2nix](https://github.com/nix-community/dream2nix). It is designed for modern Nix Flake-based workflows and is fully declarative, reproducible, and binary-optimized.
+This repository provides a NixOS module and a prebuilt Django EMR package (`care`). It is designed for modern Nix Flake-based workflows and is fully declarative, reproducible, and binary-optimized.
+
 
 ---
 
-## Quick Start
-
 ### 1. Add cook.nix as a flake input
 
-In your `flake.nix`:
+In your top-level `flake.nix`:
 
 ```nix
-{
-  inputs.cook.url = "github:tellmeY18/cook.nix";
-  # ...other inputs
-  outputs = { self, nixpkgs, cook, ... }@inputs: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux"; # or your system
-      modules = [
-        cook.nixosModules.default
-        # ...other modules
-      ];
-    };
-  };
-}
+inputs.cook.url = "github:tellmeY18/cook.nix";
 ```
 
 ---
 
-### 2. Enable CARE in your NixOS configuration
+### 2. Add the CARE module to your NixOS host configuration
 
-In your `configuration.nix` or as part of your flake-based module list:
+In your `nixosConfigurations.<hostname>` block:
 
 ```nix
+nixosConfigurations.chopper = nixpkgs.lib.nixosSystem {
+  system = "x86_64-linux";
+  modules = [
+    ./hosts/chopper/configuration.nix
+    # ...other modules...
+    cook.nixosModules.default
+  ];
+};
+```
+
+---
+
+### 3. Enable and configure CARE in your host's configuration
+
+In `./hosts/chopper/configuration.nix` (or wherever you configure your host):
+
+```nix
+{ config, pkgs, lib, cook, ... }:
+
 {
   services.care = {
     enable = true;
-    # Explicitly set the package from the flake outputs:
-    package = inputs.cook.packages.${pkgs.system}.care;
+    # Reference the care package from the cook flake input
+    package = cook.packages.${pkgs.system}.care;
     # Optionally, customize roles and environment:
     api.enable = true;
     worker.enable = true;
@@ -57,11 +63,31 @@ In your `configuration.nix` or as part of your flake-based module list:
 }
 ```
 
+**Note:**  
+- The variable `cook` is available in your host config if you pass it via `specialArgs` in your flake (recommended).
+- If you use `specialArgs`, add `specialArgs = { inherit cook; };` to your `nixosConfigurations.<hostname>` block.
+
+---
+
+### 4. Rebuild your system
+
+```sh
+sudo nixos-rebuild switch --flake .
+```
+
+---
+
+**Summary:**  
+- Add `cook` as a flake input.
+- Add `cook.nixosModules.default` to your host's module list.
+- Pass `cook` as a `specialArg` and set `services.care.package = cook.packages.${pkgs.system}.care;` in your host config.
+- Enable and configure CARE as needed.
+
 ---
 
 ### 3. What this does
 
-- Installs the dream2nix-built `care` package and all dependencies.
+- Installs the prebuilt `care` package and all dependencies.
 - Sets up systemd services for API, Celery worker, and Celery beat.
 - Runs Django migrations automatically before starting services.
 - Ensures PostgreSQL, Redis, and other dependencies are available.
