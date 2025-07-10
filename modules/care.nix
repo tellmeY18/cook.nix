@@ -69,14 +69,12 @@ in {
       config.services.care.package
     ];
 
-    # Ensure Redis is enabled and running as a system service
-    services.redis = {
-      enable = true;
-      # Optionally, configure Redis to match environment variables if needed:
-      # port = lib.toInt (config.services.care.environment.REDIS_PORT or "6379");
-      # bind = config.services.care.environment.REDIS_HOST or "127.0.0.1";
-      # requirePass = config.services.care.environment.REDIS_AUTH_TOKEN or null;
-    };
+    # Ensure Redis is enabled and running as a system service (new multi-instance syntax)
+    services.redis.servers."".enable = true;
+    # Optionally, configure Redis to match environment variables if needed:
+    # services.redis.servers."".port = lib.toInt (config.services.care.environment.REDIS_PORT or "6379");
+    # services.redis.servers."".bind = config.services.care.environment.REDIS_HOST or "127.0.0.1";
+    # services.redis.servers."".requirePass = config.services.care.environment.REDIS_AUTH_TOKEN or null;
 
     # Django migration oneshot service
     systemd.services.care-migrate = {
@@ -84,7 +82,7 @@ in {
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
       environment = config.services.care.environment // {
-        DJANGO_SETTINGS_MODULE = "care.settings";
+        DJANGO_SETTINGS_MODULE = "config.settings.staging";
       };
       serviceConfig = {
         Type = "oneshot";
@@ -98,10 +96,10 @@ in {
           # Wait for Redis
           "${wait4x}/bin/wait4x tcp ${config.services.care.environment.REDIS_HOST or "localhost"}:${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
           # Django migration commands
-          "${config.services.care.package}/bin/python manage.py migrate --noinput"
-          "${config.services.care.package}/bin/python manage.py compilemessages -v 0"
-          "${config.services.care.package}/bin/python manage.py sync_permissions_roles"
-          "${config.services.care.package}/bin/python manage.py sync_valueset"
+          "${config.services.care.package}/bin/python3 manage.py migrate --noinput"
+          "${config.services.care.package}/bin/python3 manage.py compilemessages -v 0"
+          "${config.services.care.package}/bin/python3 manage.py sync_permissions_roles"
+          "${config.services.care.package}/bin/python3 manage.py sync_valueset"
         ];
       };
       wantedBy = [ "multi-user.target" ];
