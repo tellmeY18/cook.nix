@@ -1,7 +1,6 @@
 { config, pkgs, lib, ... }:
 
 let
-  carePkg = config.services.care.package or pkgs.care;
   wait4x = pkgs.wait4x;
 in {
   options.services.care = {
@@ -47,7 +46,7 @@ in {
     };
     package = lib.mkOption {
       type = lib.types.package;
-      default = carePkg;
+      default = pkgs.care;
       description = "Which package to run for CARE";
     };
   };
@@ -89,10 +88,10 @@ in {
           # Wait for Redis
           "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
           # Django migration commands
-          "${carePkg}/bin/python manage.py migrate --noinput"
-          "${carePkg}/bin/python manage.py compilemessages -v 0"
-          "${carePkg}/bin/python manage.py sync_permissions_roles"
-          "${carePkg}/bin/python manage.py sync_valueset"
+          "${config.services.care.package}/bin/python manage.py migrate --noinput"
+          "${config.services.care.package}/bin/python manage.py compilemessages -v 0"
+          "${config.services.care.package}/bin/python manage.py sync_permissions_roles"
+          "${config.services.care.package}/bin/python manage.py sync_valueset"
         ];
       };
       wantedBy = [ "multi-user.target" ];
@@ -115,7 +114,7 @@ in {
           "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
-          "${carePkg}/bin/gunicorn"
+          "${config.services.care.package}/bin/gunicorn"
           "-w 4"
           "care.wsgi:application"
           "--bind" "0.0.0.0:8000"
@@ -143,7 +142,7 @@ in {
           "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
-          "${carePkg}/bin/celery"
+          "${config.services.care.package}/bin/celery"
           "--app=care.celery_app"
           "worker"
           "--max-tasks-per-child=6"
@@ -172,7 +171,7 @@ in {
           "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
-          "${carePkg}/bin/celery"
+          "${config.services.care.package}/bin/celery"
           "--app=care.celery_app"
           "beat"
           "--loglevel=info"
