@@ -13,11 +13,14 @@
       {
         formatter = pkgs.nixpkgs-fmt;
         packages = {
-          care = pkgs.callPackage ./packages/care { };
+          care = pkgs.callPackage ./pkgs/care { };
         };
       }
     ) // {
-      nixosModules.default = import ./modules/default.nix;
+      nixosModules.default = { pkgs, ... }: {
+        imports = [ ./modules/default.nix ];
+        nixpkgs.overlays = [ (import ./overlays/care-overlay.nix) ];
+      };
       overlays.default = import ./overlays/care-overlay.nix;
     };
 }

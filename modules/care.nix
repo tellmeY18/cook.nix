@@ -46,8 +46,13 @@ in {
     };
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.care;
       description = "Which package to run for CARE";
+      default = pkgs.care or (throw ''
+        pkgs.care is not available. Make sure you've applied the care overlay:
+          nixpkgs.overlays = [ inputs.cook.overlays.default ];
+        Or provide a package manually:
+          services.care.package = pkgs.callPackage inputs.cook.packages.${pkgs.system}.care {};
+      '');
     };
   };
 
@@ -66,6 +71,7 @@ in {
       redis
       garage_2
       wait4x
+      config.services.care.package
     ];
 
     # Django migration oneshot service
