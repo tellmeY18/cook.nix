@@ -85,9 +85,9 @@ in {
         Group = "care";
         ExecStart = lib.concatStringsSep " && " [
           # Wait for PostgreSQL
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.POSTGRES_PORT or 5432)).value)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (config.services.care.environment.POSTGRES_PORT or 5432)} --timeout 60s"
           # Wait for Redis
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
           # Django migration commands
           "${config.services.care.package}/bin/python manage.py migrate --noinput"
           "${config.services.care.package}/bin/python manage.py compilemessages -v 0"
@@ -110,9 +110,9 @@ in {
       serviceConfig = {
         ExecStartPre = lib.concatStringsSep " && " [
           # Wait for PostgreSQL
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.POSTGRES_PORT or 5432)).value)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (config.services.care.environment.POSTGRES_PORT or 5432)} --timeout 60s"
           # Wait for Redis
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
           "${config.services.care.package}/bin/gunicorn"
@@ -139,8 +139,8 @@ in {
       };
       serviceConfig = {
         ExecStartPre = lib.concatStringsSep " && " [
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.POSTGRES_PORT or 5432)).value)} --timeout 60s"
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (config.services.care.environment.POSTGRES_PORT or 5432)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
           "${config.services.care.package}/bin/celery"
@@ -168,8 +168,8 @@ in {
       };
       serviceConfig = {
         ExecStartPre = lib.concatStringsSep " && " [
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.POSTGRES_PORT or 5432)).value)} --timeout 60s"
-          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (builtins.tryEval (builtins.fromJSON (builtins.toJSON config.services.care.environment.REDIS_PORT or 6379)).value)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.POSTGRES_HOST or "localhost"} --port ${toString (config.services.care.environment.POSTGRES_PORT or 5432)} --timeout 60s"
+          "${wait4x}/bin/wait4x tcp --host ${config.services.care.environment.REDIS_HOST or "localhost"} --port ${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
           "${config.services.care.package}/bin/celery"
