@@ -69,6 +69,15 @@ in {
       config.services.care.package
     ];
 
+    # Ensure Redis is enabled and running as a system service
+    services.redis = {
+      enable = true;
+      # Optionally, configure Redis to match environment variables if needed:
+      # port = lib.toInt (config.services.care.environment.REDIS_PORT or "6379");
+      # bind = config.services.care.environment.REDIS_HOST or "127.0.0.1";
+      # requirePass = config.services.care.environment.REDIS_AUTH_TOKEN or null;
+    };
+
     # Django migration oneshot service
     systemd.services.care-migrate = {
       description = "CARE Django database migration and setup";
