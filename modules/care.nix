@@ -50,7 +50,8 @@ in {
     package = lib.mkOption {
       type = lib.types.package;
       description = "Which package to run for CARE";
-      # No default - this will be set by the flake's nixosModule
+      default = pkgs.care;
+      example = pkgs.care;
     };
   };
 
