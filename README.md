@@ -1,51 +1,76 @@
 # cook.nix
 
-## Quick Start with Nix Flakes
+## CARE Django EMR on NixOS with dream2nix
 
-This repository contains a `flake.nix` at the root level, making it easy to use as an input in your NixOS configuration. You can import the CARE module directly from the flake.
+This repository provides a NixOS module and a prebuilt Django EMR package (`care`) using [dream2nix](https://github.com/nix-community/dream2nix). It is designed for modern Nix Flake-based workflows and is fully declarative, reproducible, and binary-optimized.
 
-### 1. Add to Your NixOS Configuration
+---
 
-Add this repository as an input in your `flake.nix`:
+## Quick Start
+
+### 1. Add cook.nix as a flake input
+
+In your `flake.nix`:
 
 ```nix
 {
   inputs.cook.url = "github:tellmeY18/cook.nix";
   # ...other inputs
-  outputs = { self, nixpkgs, cook, ... }@inputs:
-    let
+  outputs = { self, nixpkgs, cook, ... }@inputs: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux"; # or your system
-      pkgs = import nixpkgs { inherit system; };
-    in {
-      nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
-        inherit system;
-        modules = [
-          cook.nixosModules.default
-          # ...other modules
-        ];
-      };
+      modules = [
+        cook.nixosModules.default
+        # ...other modules
+      ];
     };
+  };
 }
 ```
 
-### 2. Enable CARE Services
+---
 
-With the new defaults, you only need to enable the service:
+### 2. Enable CARE in your NixOS configuration
+
+In your `configuration.nix` or as part of your flake-based module list:
 
 ```nix
-services.care.enable = true;
+{
+  services.care = {
+    enable = true;
+    # Explicitly set the package from the flake outputs:
+    package = inputs.cook.packages.${pkgs.system}.care;
+    # Optionally, customize roles and environment:
+    api.enable = true;
+    worker.enable = true;
+    beat.enable = true;
+    environment = {
+      DATABASE_URL = "postgres://user:pass@localhost:5432/care";
+      REDIS_URL = "redis://localhost:6379/0";
+      POSTGRES_HOST = "localhost";
+      POSTGRES_PORT = "5432";
+      REDIS_HOST = "localhost";
+      REDIS_PORT = "6379";
+      # Add S3/garage2 variables as needed
+    };
+  };
+}
 ```
 
-This will:
-- Enable the API, celery worker, and celery beat roles by default.
-- Set up all environment variables for a local PostgreSQL and Redis instance.
-- Provide a working out-of-the-box setup for local development.
+---
 
-You can override any environment variables or role enables as needed.
+### 3. What this does
 
-### 3. Customize (Optional)
+- Installs the dream2nix-built `care` package and all dependencies.
+- Sets up systemd services for API, Celery worker, and Celery beat.
+- Runs Django migrations automatically before starting services.
+- Ensures PostgreSQL, Redis, and other dependencies are available.
 
-Override environment variables or roles if needed:
+---
+
+## Advanced Configuration
+
+You can override any environment variables or enable/disable specific roles:
 
 ```nix
 services.care.environment.DATABASE_URL = "postgres://custom:custom@dbhost:5432/customdb";
@@ -54,84 +79,25 @@ services.care.worker.enable = false;
 services.care.beat.enable = true;
 ```
 
-## CARE Cookbook Usage
+For advanced S3/garage2 configuration, add the relevant environment variables.
 
-This cookbook provides a pure Nix module for running the CARE Django EMR application, including API, Celery worker, and Celery beat roles, with automatic migrations and dependency management.
+---
 
-### How to Use
+## Notes
 
-1. **Import the Module**
+- No impure scripting or bash is used; all orchestration is handled via pure Nix and systemd.
+- You **must** set `services.care.package` explicitly as shown above, because Nix flakes do not automatically pass outputs into module scope.
+- For more advanced configuration, see the comments in `cook.nix/modules/care.nix`.
 
-   In your NixOS configuration, import the CARE module:
+---
 
-   ```nix
-   {
-     imports = [
-       /path/to/cook.nix/modules/care.nix
-     ];
-   }
-   ```
-
-2. **Enable CARE Services**
-
-   Enable the CARE service and select which roles you want to run:
-
-   ```nix
-   services.care = {
-     enable = true;
-     api.enable = true;      # Enable the API (gunicorn)
-     worker.enable = true;   # Enable the Celery worker
-     beat.enable = true;     # Enable the Celery beat
-   };
-   ```
-
-3. **Set Environment Variables**
-
-   Configure all required environment variables for your deployment:
-
-   ```nix
-   services.care.environment = {
-     DATABASE_URL = "postgres://user:pass@host:5432/dbname";
-     REDIS_URL = "rediss://:password@host:6379/0?ssl_cert_reqs=none";
-     POSTGRES_HOST = "localhost";
-     POSTGRES_PORT = "5432";
-     REDIS_HOST = "localhost";
-     REDIS_PORT = "6379";
-     # Add S3/garage2 or other variables as needed
-   };
-   ```
-
-4. **Automatic Migrations**
-
-   Every time the CARE package or configuration changes, a systemd oneshot service (`care-migrate`) will automatically run the following Django commands before starting any CARE service:
-
-   - `python manage.py migrate --noinput`
-   - `python manage.py compilemessages -v 0`
-   - `python manage.py sync_permissions_roles`
-   - `python manage.py sync_valueset`
-
-   All main services (`care-api`, `care-worker`, `care-beat`) will wait for migrations to complete before starting.
-
-5. **Dependencies**
-
-   The module ensures the following dependencies are available on your system:
-   - PostgreSQL
-   - Redis
-   - garage_2 (S3-compatible object store)
-   - wait4x (for service readiness checks)
-
-   These are added to your system environment automatically.
-
-### Example Minimal Configuration
+## Example Minimal Configuration
 
 ```nix
 {
-  imports = [
-    /path/to/cook.nix/modules/care.nix
-  ];
-
   services.care = {
     enable = true;
+    package = inputs.cook.packages.${pkgs.system}.care;
     api.enable = true;
     worker.enable = true;
     beat.enable = true;
@@ -148,109 +114,13 @@ This cookbook provides a pure Nix module for running the CARE Django EMR applica
 }
 ```
 
-### Notes
+---
 
-- No impure scripting or bash is used; all orchestration is handled via pure Nix and systemd.
-- You can further customize the environment and service options as needed.
-- For advanced S3/garage2 configuration, add the relevant environment variables.
+## Troubleshooting
 
+- If you see errors about missing `care` package, ensure you have set `services.care.package` as shown above.
+- If you update the flake, run `nix flake update` and rebuild your system.
 
-## CARE Cookbook Usage
+---
 
-This cookbook provides a pure Nix module for running the CARE Django EMR application, including API, Celery worker, and Celery beat roles, with automatic migrations and dependency management.
-
-### How to Use
-
-1. **Import the Module**
-
-   In your NixOS configuration, import the CARE module:
-
-   ```nix
-   {
-     imports = [
-       /path/to/cook.nix/modules/care.nix
-     ];
-   }
-   ```
-
-2. **Enable CARE Services**
-
-   Enable the CARE service and select which roles you want to run:
-
-   ```nix
-   services.care = {
-     enable = true;
-     api.enable = true;      # Enable the API (gunicorn)
-     worker.enable = true;   # Enable the Celery worker
-     beat.enable = true;     # Enable the Celery beat
-   };
-   ```
-
-3. **Set Environment Variables**
-
-   Configure all required environment variables for your deployment:
-
-   ```nix
-   services.care.environment = {
-     DATABASE_URL = "postgres://user:pass@host:5432/dbname";
-     REDIS_URL = "rediss://:password@host:6379/0?ssl_cert_reqs=none";
-     POSTGRES_HOST = "localhost";
-     POSTGRES_PORT = "5432";
-     REDIS_HOST = "localhost";
-     REDIS_PORT = "6379";
-     # Add S3/garage2 or other variables as needed
-   };
-   ```
-
-4. **Automatic Migrations**
-
-   Every time the CARE package or configuration changes, a systemd oneshot service (`care-migrate`) will automatically run the following Django commands before starting any CARE service:
-
-   - `python manage.py migrate --noinput`
-   - `python manage.py compilemessages -v 0`
-   - `python manage.py sync_permissions_roles`
-   - `python manage.py sync_valueset`
-
-   All main services (`care-api`, `care-worker`, `care-beat`) will wait for migrations to complete before starting.
-
-5. **Dependencies**
-
-   The module ensures the following dependencies are available on your system:
-   - PostgreSQL
-   - Redis
-   - garage_2 (S3-compatible object store)
-   - wait4x (for service readiness checks)
-
-   These are added to your system environment automatically.
-
-### Example Minimal Configuration
-
-```nix
-{
-  imports = [
-    /path/to/cook.nix/modules/care.nix
-  ];
-
-  services.care = {
-    enable = true;
-    api.enable = true;
-    worker.enable = true;
-    beat.enable = true;
-    environment = {
-      DATABASE_URL = "postgres://user:pass@localhost:5432/care";
-      REDIS_URL = "redis://localhost:6379/0";
-      POSTGRES_HOST = "localhost";
-      POSTGRES_PORT = "5432";
-      REDIS_HOST = "localhost";
-      REDIS_PORT = "6379";
-      # Add S3/garage2 variables as needed
-    };
-  };
-}
-```
-
-### Notes
-
-- No impure scripting or bash is used; all orchestration is handled via pure Nix and systemd.
-- You can further customize the environment and service options as needed.
-- For advanced S3/garage2 configuration, add the relevant environment variables.
+## License

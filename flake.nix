@@ -41,8 +41,8 @@
         imports = [ ./modules/default.nix ];
 
         config = {
-          # If package isn't explicitly set, use our care package from flake outputs
-          services.care.package = lib.mkDefault (args.self.packages.${args.pkgs.system}.care);
+          # NOTE: You must set services.care.package explicitly in your NixOS configuration, e.g.:
+          # services.care.package = inputs.cook.packages.${pkgs.system}.care;
         };
       };
     };
