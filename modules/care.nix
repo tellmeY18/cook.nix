@@ -96,10 +96,10 @@ in {
           # Wait for Redis
           "${wait4x}/bin/wait4x tcp ${config.services.care.environment.REDIS_HOST or "localhost"}:${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
           # Django migration commands
-          "${config.services.care.package}/bin/python3 manage.py migrate --noinput"
-          "${config.services.care.package}/bin/python3 manage.py compilemessages -v 0"
-          "${config.services.care.package}/bin/python3 manage.py sync_permissions_roles"
-          "${config.services.care.package}/bin/python3 manage.py sync_valueset"
+          "${config.services.care.package}/bin/care-manage migrate --noinput"
+          "${config.services.care.package}/bin/care-manage compilemessages -v 0"
+          "${config.services.care.package}/bin/care-manage sync_permissions_roles"
+          "${config.services.care.package}/bin/care-manage sync_valueset"
         ];
       };
       wantedBy = [ "multi-user.target" ];
@@ -122,7 +122,7 @@ in {
           "${wait4x}/bin/wait4x tcp ${config.services.care.environment.REDIS_HOST or "localhost"}:${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
-          "${config.services.care.package}/bin/gunicorn"
+          "${config.services.care.package}/bin/care-gunicorn"
           "-w 4"
           "care.wsgi:application"
           "--bind" "0.0.0.0:8000"
@@ -150,7 +150,7 @@ in {
           "${wait4x}/bin/wait4x tcp ${config.services.care.environment.REDIS_HOST or "localhost"}:${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
-          "${config.services.care.package}/bin/celery"
+          "${config.services.care.package}/bin/care-celery"
           "--app=care.celery_app"
           "worker"
           "--max-tasks-per-child=6"
@@ -179,7 +179,7 @@ in {
           "${wait4x}/bin/wait4x tcp ${config.services.care.environment.REDIS_HOST or "localhost"}:${toString (config.services.care.environment.REDIS_PORT or 6379)} --timeout 60s"
         ];
         ExecStart = lib.concatStringsSep " " [
-          "${config.services.care.package}/bin/celery"
+          "${config.services.care.package}/bin/care-celery"
           "--app=care.celery_app"
           "beat"
           "--loglevel=info"
