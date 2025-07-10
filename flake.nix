@@ -13,13 +13,18 @@
       {
         formatter = pkgs.nixpkgs-fmt;
         packages = {
-          care = pkgs.callPackage ./pkgs/care { };
+          care = pkgs.callPackage ./pkgs/care/default.nix { };
         };
       }
     ) // {
-      nixosModules.default = { pkgs, ... }: {
+      nixosModules.default = { config, lib, pkgs, ... }: {
         imports = [ ./modules/default.nix ];
+
+        # Apply the overlay to make care package available
         nixpkgs.overlays = [ (import ./overlays/care-overlay.nix) ];
+
+        # If package isn't explicitly set, use our care package
+        config.services.care.package = lib.mkDefault pkgs.care;
       };
       overlays.default = import ./overlays/care-overlay.nix;
     };

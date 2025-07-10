@@ -1,10 +1,12 @@
-{ lib, python3, fetchFromGitHub, celery, django, djangorestframework, redis, gunicorn, ... }:
+{ lib, pkgs, ... }:
 
-python3.pkgs.buildPythonApplication rec {
+let
+  pythonPackages = pkgs.python3.pkgs;
+in pythonPackages.buildPythonApplication rec {
   pname = "care";
   version = "3.0.0";
 
-  src = fetchFromGitHub {
+  src = pkgs.fetchFromGitHub {
     owner  = "ohcnetwork";
     repo   = "care";
     rev    = "v${version}";
@@ -12,7 +14,7 @@ python3.pkgs.buildPythonApplication rec {
   };
 
   # all your Python deps
-  propagatedBuildInputs = with python3.pkgs; [
+  propagatedBuildInputs = with pythonPackages; [
     django
     djangorestframework
     celery
@@ -22,7 +24,7 @@ python3.pkgs.buildPythonApplication rec {
   ];
 
   # expose manage.py / any entrypoints
-  checkInputs = [ python3.pkgs.pytest ];
+  checkInputs = [ pythonPackages.pytest ];
   doCheck     = false;
 
   meta = with lib; {
@@ -32,4 +34,3 @@ python3.pkgs.buildPythonApplication rec {
     platforms   = platforms.linux;
   };
 }
-

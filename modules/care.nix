@@ -47,12 +47,7 @@ in {
     package = lib.mkOption {
       type = lib.types.package;
       description = "Which package to run for CARE";
-      default = pkgs.care or (throw ''
-        pkgs.care is not available. Make sure you've applied the care overlay:
-          nixpkgs.overlays = [ inputs.cook.overlays.default ];
-        Or provide a package manually:
-          services.care.package = pkgs.callPackage inputs.cook.packages.${pkgs.system}.care {};
-      '');
+      # No default - this will be set by the flake's nixosModule
     };
   };
 
