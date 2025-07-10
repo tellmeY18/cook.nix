@@ -37,12 +37,12 @@
         };
       }
     ) // {
-      nixosModules.default = { config, lib, pkgs, ... }: {
+      nixosModules.default = { config, lib, pkgs, ... }@args: {
         imports = [ ./modules/default.nix ];
 
         config = {
           # If package isn't explicitly set, use our care package from flake outputs
-          services.care.package = lib.mkDefault self.packages.${system}.care;
+          services.care.package = lib.mkDefault (args.self.packages.${args.pkgs.system}.care);
         };
       };
     };
