@@ -17,7 +17,7 @@
         };
       }
     ) // {
-      nixosModules.default = import ./modules;
+      nixosModules.default = import ./modules/default.nix;
       overlays.default = import ./overlays/care-overlay.nix;
     };
 }
