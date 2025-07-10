@@ -69,7 +69,8 @@ in {
       redis
       garage_2
       wait4x
-      care
+      # Use the care package from flake outputs if available
+      (config.packages.care or config.services.care.package)
     ];
 
     # Ensure Redis is enabled and running as a system service (new multi-instance syntax)
