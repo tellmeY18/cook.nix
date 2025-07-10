@@ -57,7 +57,10 @@ in {
       isSystemUser = true;
       home = "/var/lib/care";
       createHome = true;
+      group = "care";
     };
+
+    users.groups.care = {};
 
     environment.systemPackages = with pkgs; [
       postgresql
