@@ -5,12 +5,14 @@ let
 in pythonPackages.buildPythonApplication rec {
   pname = "care";
   version = "3.0.0";
+  pyproject = true;
+  build-system = [ pythonPackages.setuptools ];
 
   src = pkgs.fetchFromGitHub {
     owner  = "ohcnetwork";
     repo   = "care";
     rev    = "v${version}";
-    sha256 = lib.fakeSha256;  # replace on first build
+    sha256 =  "sha256-B7d+hiNYDVSDicukVakTl4g3d6dz8uEWy9skzlrfw5U=";
   };
 
   # all your Python deps
